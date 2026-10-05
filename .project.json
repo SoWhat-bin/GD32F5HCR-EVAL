@@ -1,0 +1,292 @@
+{
+  "projectname": "gd32f5hcr_eval_lvgl",
+  "mcu": "GD32F5HCRIL6",
+  "debug": {
+    "activeConfiguration": "Debug",
+    "configurations": [
+      {
+        "name": "Debug",
+        "probe": "gdlink",
+        "sn": "",
+        "cfg": [
+          "C:/Users/86135/Desktop/GD32F5HCR-EVAL/openocd_gdlink/openocd_gdlink_gd32w51x_f5hc.cfg"
+        ],
+        "interface": "swd",
+        "speed": 4000,
+        "svdFile": "C:\\Users\\86135\\.vscode\\extensions\\gigadevice.gd32-devsuite-vscode-0.7.0\\mcudeva\\resources\\svd\\GD32F5HC.svd",
+        "elfFile": "C:\\Users\\86135\\Desktop\\GD32F5HCR-EVAL\\build\\Debug\\gd32f5hcr_eval_lvgl.elf",
+        "resetOnConnect": true,
+        "loadSymbolsOnly": false,
+        "freezePeripherals": false
+      }
+    ]
+  },
+  "scanExcludes": [
+    "tools/",
+    ".git/",
+    ".svn/",
+    ".vscode/"
+  ],
+  "ProjectActiveConfigurations": "Debug",
+  "configurations": {
+    "Debug": {
+      "targetProcessor": {
+        "armFamily": "cortex-m33",
+        "architecture": "None",
+        "instructionSet": "Thumb",
+        "floatABI": "None",
+        "fpuType": "None",
+        "otherTargetFlags": ""
+      },
+      "optimization": {
+        "level": "-O0",
+        "messageLength": true,
+        "signedChar": true,
+        "functionSections": true,
+        "dataSections": true,
+        "noCommon": false,
+        "pic": false,
+        "lto": false,
+        "otherFlags": ""
+      },
+      "warnings": {
+        "syntaxOnly": false,
+        "inhibitAll": false,
+        "werror": false,
+        "pedantic": false,
+        "pedanticErrors": false,
+        "wall": false,
+        "wextra": false,
+        "wunused": false,
+        "wuninitialized": false,
+        "wconversion": false,
+        "otherFlags": ""
+      },
+      "debugging": {
+        "level": "-g3",
+        "prof": false,
+        "gprof": false,
+        "otherFlags": ""
+      },
+      "outputFile": {
+        "list": true,
+        "dump": false,
+        "hex": true,
+        "bin": false,
+        "mot": false,
+        "size": true,
+        "objcopyFlags": "",
+        "objdumpFlags": "--source --all-headers --demangle --line-numbers --wide",
+        "sizeFlags": "--format=berkeley"
+      },
+      "compiler": {
+        "general": {
+          "cStandard": "-std=gnu11",
+          "otherFlags": ""
+        },
+        "preprocessor": {
+          "defines": [
+            "USE_STDPERIPH_DRIVER",
+            "SYS_NS",
+            "GD32F5HC",
+            "FW_DEBUG_ERR_REPORT",
+            "GD_ECLIPSE_GCC"
+          ]
+        },
+        "includes": {
+          "includePaths": [
+            "Firmware/CMSIS",
+            "Firmware/CMSIS/GD/GD32W51x_F5HC/Include",
+            "Firmware/GD32W51x_F5HC_standard_peripheral/Include",
+            "inc",
+            "freertos",
+            "lvgl",
+            "lvgl/lvgl_port",
+            "freertos/include"
+          ],
+          "systemPaths": [],
+          "includeFiles": []
+        }
+      },
+      "linker": {
+        "general": {
+          "linkerScript": "gd32f5hc_flash.ld",
+          "nostartfiles": false,
+          "nodefaultlibs": false,
+          "nostdlib": false,
+          "gcSections": true,
+          "stripAll": false
+        },
+        "libraries": {
+          "libs": [],
+          "searchPaths": [
+            "ldscripts/"
+          ]
+        },
+        "miscellaneous": {
+          "linkerFlags": [],
+          "otherObjects": [],
+          "generateMap": true,
+          "crossReference": false,
+          "newlibNano": true,
+          "printfFloat": false,
+          "noSyscalls": true,
+          "otherFlags": "-Wl,--no-warn-rwx-segments"
+        }
+      },
+      "assembler": {
+        "preprocessor": {
+          "usePreprocessor": true,
+          "nostdinc": false
+        },
+        "miscellaneous": {
+          "assemblerFlags": "",
+          "generateListing": false,
+          "verbose": false,
+          "otherFlags": ""
+        },
+        "includes": {
+          "includePaths": [],
+          "systemPaths": [],
+          "includeFiles": []
+        }
+      },
+      "buildSteps": {
+        "preBuild": {
+          "command": "",
+          "description": ""
+        },
+        "postBuild": {
+          "command": "",
+          "description": ""
+        }
+      },
+      "buildArtifact": {
+        "artifactType": "executable",
+        "artifactName": "${ProjName}",
+        "artifactExtension": "elf",
+        "outputPrefix": ""
+      }
+    },
+    "Release": {
+      "targetProcessor": {
+        "armFamily": "cortex-m33",
+        "architecture": "None",
+        "instructionSet": "Thumb",
+        "floatABI": "None",
+        "fpuType": "None",
+        "otherTargetFlags": ""
+      },
+      "optimization": {
+        "level": "-O0",
+        "messageLength": true,
+        "signedChar": true,
+        "functionSections": true,
+        "dataSections": true,
+        "noCommon": false,
+        "pic": false,
+        "lto": false,
+        "otherFlags": ""
+      },
+      "warnings": {
+        "syntaxOnly": false,
+        "inhibitAll": false,
+        "werror": false,
+        "pedantic": false,
+        "pedanticErrors": false,
+        "wall": false,
+        "wextra": false,
+        "wunused": false,
+        "wuninitialized": false,
+        "wconversion": false,
+        "otherFlags": ""
+      },
+      "debugging": {
+        "level": "-g",
+        "prof": false,
+        "gprof": false,
+        "otherFlags": ""
+      },
+      "outputFile": {
+        "list": true,
+        "dump": false,
+        "hex": true,
+        "bin": true,
+        "mot": false,
+        "size": true,
+        "objcopyFlags": "",
+        "objdumpFlags": "--source --all-headers --demangle --line-numbers --wide",
+        "sizeFlags": "--format=berkeley"
+      },
+      "compiler": {
+        "general": {
+          "cStandard": "-std=gnu11",
+          "otherFlags": ""
+        },
+        "preprocessor": {
+          "defines": [
+            "USE_STDPERIPH_DRIVER",
+            "SYS_NS",
+            "GD32F5HC",
+            "FW_DEBUG_ERR_REPORT",
+            "NDEBUG"
+          ]
+        },
+        "includes": {
+          "includePaths": [
+            "Firmware/CMSIS",
+            "Firmware/CMSIS/GD/GD32W51x_F5HC/Include",
+            "Firmware/GD32W51x_F5HC_standard_peripheral/Include",
+            "inc"
+          ],
+          "systemPaths": [],
+          "includeFiles": []
+        }
+      },
+      "linker": {
+        "general": {
+          "linkerScript": "gd32f5hc_flash.ld",
+          "nostartfiles": false,
+          "nodefaultlibs": false,
+          "nostdlib": false,
+          "gcSections": true,
+          "stripAll": false
+        },
+        "libraries": {
+          "libs": [],
+          "searchPaths": [
+            "ldscripts/"
+          ]
+        },
+        "miscellaneous": {
+          "linkerFlags": [],
+          "otherObjects": [],
+          "generateMap": true,
+          "crossReference": false,
+          "newlibNano": true,
+          "printfFloat": false,
+          "noSyscalls": true,
+          "otherFlags": "-Wl,--no-warn-rwx-segments"
+        }
+      },
+      "assembler": {
+        "preprocessor": {
+          "usePreprocessor": true,
+          "nostdinc": false
+        },
+        "miscellaneous": {
+          "assemblerFlags": "",
+          "generateListing": false,
+          "verbose": false,
+          "otherFlags": ""
+        },
+        "includes": {
+          "includePaths": [],
+          "systemPaths": [],
+          "includeFiles": []
+        }
+      }
+    }
+  }
+}
+

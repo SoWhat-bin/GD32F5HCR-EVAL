@@ -1,0 +1,3 @@
+C:/Users/86135/Desktop/GD32F5HCR-EVAL/build/Debug/CMakeFiles/gd32f5hcr_eval_lvgl.elf.dir
+C:/Users/86135/Desktop/GD32F5HCR-EVAL/build/Debug/CMakeFiles/edit_cache.dir
+C:/Users/86135/Desktop/GD32F5HCR-EVAL/build/Debug/CMakeFiles/rebuild_cache.dir

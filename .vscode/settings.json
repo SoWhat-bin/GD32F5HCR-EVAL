@@ -1,0 +1,9 @@
+{
+    "cmake.cmakePath": "cmake",
+    "cmake.configureOnOpen": true,
+    "cmake.useVsDeveloperEnvironment": "never",
+    "debug.allowBreakpointsEverywhere": true,
+    "terminal.integrated.env.windows": {
+        "PATH": "${workspaceFolder}\\tools\\toolchain\\arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi\\bin;${env:Path}"
+    }
+}
