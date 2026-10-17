@@ -67,6 +67,11 @@ void lv_gif_set_src(lv_obj_t * obj, const void * src)
         gifobj->imgdsc.data = NULL;
     }
 
+    if(gifobj->timer == NULL) {
+        LV_LOG_ERROR("GIF timer is unavailable");
+        return;
+    }
+
     if(lv_img_src_get_type(src) == LV_IMG_SRC_VARIABLE) {
         const lv_img_dsc_t * img_dsc = src;
         gifobj->gif = gd_open_gif_data(img_dsc->data);
@@ -98,6 +103,9 @@ void lv_gif_set_src(lv_obj_t * obj, const void * src)
 void lv_gif_restart(lv_obj_t * obj)
 {
     lv_gif_t * gifobj = (lv_gif_t *) obj;
+    if(gifobj->gif == NULL || gifobj->timer == NULL) {
+        return;
+    }
     gd_rewind(gifobj->gif);
     lv_timer_resume(gifobj->timer);
     lv_timer_reset(gifobj->timer);
@@ -115,6 +123,10 @@ static void lv_gif_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
 
     gifobj->gif = NULL;
     gifobj->timer = lv_timer_create(next_frame_task_cb, 10, obj);
+    if(gifobj->timer == NULL) {
+        LV_LOG_ERROR("Failed to create GIF timer");
+        return;
+    }
     lv_timer_pause(gifobj->timer);
 }
 
@@ -125,9 +137,10 @@ static void lv_gif_destructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
     lv_img_cache_invalidate_src(&gifobj->imgdsc);
     if(gifobj->gif)
         gd_close_gif(gifobj->gif);
-    lv_timer_del(gifobj->timer);
+    if(gifobj->timer != NULL) {
+        lv_timer_del(gifobj->timer);
+    }
 }
-
 static void next_frame_task_cb(lv_timer_t * t)
 {
     lv_obj_t * obj = t->user_data;

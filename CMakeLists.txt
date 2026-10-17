@@ -18,6 +18,10 @@ set(LINKER_SCRIPT gd32f5hc_flash.ld)
 
 # ---- [mcudeva:user] BEGIN prologue — 用户自定义区，重新生成时保留，可自由修改 ----
 # 可在此设置前置变量 / option()，作用于后续所有自动区
+set(GD32_UI_DIR "${CMAKE_SOURCE_DIR}/../GD32-UI" CACHE PATH "GD32-UI project root")
+if(NOT EXISTS "${GD32_UI_DIR}/generated" OR NOT EXISTS "${GD32_UI_DIR}/custom/gui_app.c")
+    message(FATAL_ERROR "GD32-UI sources not found: ${GD32_UI_DIR}")
+endif()
 # ---- [mcudeva:user] END prologue ----
 
 # ==== [mcudeva:auto] BEGIN flags (hash:b36185d7) ====
@@ -87,9 +91,18 @@ set(INC_DIRS
 
 # ---- [mcudeva:user] BEGIN includes — 用户自定义区，重新生成时保留，可自由修改 ----
 # 可在此追加头文件路径，例如 list(APPEND INC_DIRS ${CMAKE_SOURCE_DIR}/my_inc)
+list(APPEND INC_DIRS
+    "${GD32_UI_DIR}"
+    "${GD32_UI_DIR}/generated"
+    "${GD32_UI_DIR}/generated/screens"
+    "${GD32_UI_DIR}/generated/lang"
+    "${GD32_UI_DIR}/generated/theme"
+    "${GD32_UI_DIR}/generated/config"
+    "${GD32_UI_DIR}/custom"
+)
 # ---- [mcudeva:user] END includes ----
 
-# ==== [mcudeva:auto] BEGIN sources (hash:b7e1e673) ====
+# ==== [mcudeva:auto] BEGIN sources (hash:73eb9583) ====
 # 源文件列表
 set(SOURCES)
 file(GLOB_RECURSE SOURCE_GLOB_0 CONFIGURE_DEPENDS
@@ -173,58 +186,25 @@ list(REVERSE SOURCE_GLOB_12)
 list(APPEND SOURCES ${SOURCE_GLOB_12})
 
 file(GLOB_RECURSE SOURCE_GLOB_13 CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/openocd/openocd-v0.12.0-i686-w64-mingw32/share/openocd/contrib/libdcc/*.c"
+    "${CMAKE_SOURCE_DIR}/tests/*.c"
 )
 list(REVERSE SOURCE_GLOB_13)
 list(APPEND SOURCES ${SOURCE_GLOB_13})
-
-file(GLOB_RECURSE SOURCE_GLOB_14 CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/toolchain/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi/share/gcc-arm-none-eabi/samples/src/fpin/*.c"
-)
-list(REVERSE SOURCE_GLOB_14)
-list(APPEND SOURCES ${SOURCE_GLOB_14})
-
-file(GLOB_RECURSE SOURCE_GLOB_15 CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/toolchain/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi/share/gcc-arm-none-eabi/samples/src/fpout/*.c"
-)
-list(REVERSE SOURCE_GLOB_15)
-list(APPEND SOURCES ${SOURCE_GLOB_15})
-
-file(GLOB_RECURSE SOURCE_GLOB_16 CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/toolchain/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi/share/gcc-arm-none-eabi/samples/src/minimum/*.c"
-)
-list(REVERSE SOURCE_GLOB_16)
-list(APPEND SOURCES ${SOURCE_GLOB_16})
-
-file(GLOB_RECURSE SOURCE_GLOB_17 CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/toolchain/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi/share/gcc-arm-none-eabi/samples/src/qemu/*.c"
-)
-list(REVERSE SOURCE_GLOB_17)
-list(APPEND SOURCES ${SOURCE_GLOB_17})
-
-file(GLOB_RECURSE SOURCE_GLOB_18 CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/toolchain/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi/share/gcc-arm-none-eabi/samples/src/retarget/*.c"
-)
-list(REVERSE SOURCE_GLOB_18)
-list(APPEND SOURCES ${SOURCE_GLOB_18})
-
-file(GLOB_RECURSE SOURCE_GLOB_19 CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/toolchain/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi/share/gcc-arm-none-eabi/samples/src/semihost/*.c"
-)
-list(REVERSE SOURCE_GLOB_19)
-list(APPEND SOURCES ${SOURCE_GLOB_19})
-
-file(GLOB_RECURSE SOURCE_GLOB_20 CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/toolchain/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi/share/gcc-arm-none-eabi/samples/startup/*.c"
-)
-list(REVERSE SOURCE_GLOB_20)
-list(APPEND SOURCES ${SOURCE_GLOB_20})
 
 # ==== [mcudeva:auto] END sources ====
 
 # ---- [mcudeva:user] BEGIN sources — 用户自定义区，重新生成时保留，可自由修改 ----
 # 可在此增删源文件，例如 list(APPEND SOURCES ${CMAKE_SOURCE_DIR}/my/extra.c)
-list(FILTER SOURCES EXCLUDE REGEX "/tools/")
+file(GLOB_RECURSE GD32_UI_SOURCES CONFIGURE_DEPENDS
+    "${GD32_UI_DIR}/generated/*.c"
+)
+list(APPEND GD32_UI_SOURCES
+    "${GD32_UI_DIR}/custom/gui_app.c"
+    "${GD32_UI_DIR}/custom/ui_platform.c"
+)
+list(FILTER GD32_UI_SOURCES EXCLUDE REGEX "/simulator/")
+list(APPEND SOURCES ${GD32_UI_SOURCES})
+list(FILTER SOURCES EXCLUDE REGEX "/tools/|/tests/")
 # ---- [mcudeva:user] END sources ----
 
 # ==== [mcudeva:auto] BEGIN target (hash:57a9b457) ====
@@ -260,3 +240,4 @@ add_custom_command(TARGET ${TARGET_ELF} POST_BUILD
 # ---- [mcudeva:user] BEGIN epilogue — 用户自定义区，重新生成时保留，可自由修改 ----
 # 可在此追加自定义 target / include(user.cmake) 等收尾语句
 # ---- [mcudeva:user] END epilogue ----
+

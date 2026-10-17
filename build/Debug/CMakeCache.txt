@@ -208,6 +208,9 @@ CMAKE_TOOLCHAIN_FILE:UNINITIALIZED=C:/Users/86135/Desktop/GD32F5HCR-EVAL/arm-non
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//GD32-UI project root
+GD32_UI_DIR:PATH=C:/Users/86135/Desktop/GD32F5HCR-EVAL/../GD32-UI
+
 //Value Computed by CMake
 gd32f5hcr_eval_lvgl_BINARY_DIR:STATIC=C:/Users/86135/Desktop/GD32F5HCR-EVAL/build/Debug
 
