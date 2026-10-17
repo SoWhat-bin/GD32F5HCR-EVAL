@@ -1,8 +1,12 @@
 #include "ui_platform.h"
+#include "bus_lock.h"
 
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "task.h"
 #include "gd32w51x_f5hc.h"
+#include "drivers/drivers.h"
+#include <stdio.h>
 
 #define RTC_BACKUP_MAGIC 0x32F0U
 #define RTC_ASYNCH_PRESCALER 0x63U
@@ -19,6 +23,12 @@
 #define UI_KEY_BACK_PORT GPIOA
 #define UI_KEY_BACK_PIN GPIO_PIN_2
 #define UI_KEY_BACK_CLK RCU_GPIOA
+
+#define UI_TEST_BUFFER_SIZE 256U
+/* keep the flash test sector at the top, clear of the ui resource area */
+#define UI_TEST_FLASH_SECTOR (NORFLASH_SIZE - NORFLASH_SECTOR_SIZE)
+#define UI_TEST_QUEUE_DEPTH 4U
+#define UI_TEST_TASK_STACK 768
 
 static bool rtc_ready;
 
@@ -76,6 +86,129 @@ static void rtc_init_from_build_time(void)
     }
 }
 
+static uint8_t test_tx[UI_TEST_BUFFER_SIZE];
+static uint8_t test_rx[UI_TEST_BUFFER_SIZE];
+static bool board_led1_ready;
+static bool adc_ready;
+static QueueHandle_t test_request_queue;
+static QueueHandle_t test_result_queue;
+
+static bool test_execute(ui_test_id_t test, char *result, uint16_t size)
+{
+    uint16_t i;
+
+    switch (test) {
+    case UI_TEST_EEPROM:
+        for (i = 0U; i < UI_TEST_BUFFER_SIZE; i++) {
+            test_tx[i] = (uint8_t)i;
+        }
+
+        if (!bus_lock_acquire(BUS_LOCK_TIMEOUT_MS)) {
+            snprintf(result, size, "FAIL busy");
+            return false;
+        }
+
+        eeprom_init();
+        if ((ERROR == eeprom_write(test_tx, 0U, UI_TEST_BUFFER_SIZE)) ||
+            (ERROR == eeprom_read(test_rx, 0U, UI_TEST_BUFFER_SIZE))) {
+            bus_lock_release();
+            snprintf(result, size, "FAIL bus");
+            return false;
+        }
+        bus_lock_release();
+
+        for (i = 0U; i < UI_TEST_BUFFER_SIZE; i++) {
+            if (test_rx[i] != test_tx[i]) {
+                snprintf(result, size, "FAIL 0x%02X", i);
+                return false;
+            }
+        }
+
+        {
+            uint32_t sum = 0U;
+
+            for (i = 0U; i < UI_TEST_BUFFER_SIZE; i++) {
+                sum += test_rx[i];
+            }
+            snprintf(result, size, "OK 0x%04lX", (unsigned long)sum);
+        }
+        return true;
+
+    case UI_TEST_NORFLASH: {
+        uint32_t id;
+
+        if (!bus_lock_acquire(BUS_LOCK_TIMEOUT_MS)) {
+            snprintf(result, size, "FAIL busy");
+            return false;
+        }
+
+        id = norflash_init();
+        if (NORFLASH_ID != id) {
+            bus_lock_release();
+            snprintf(result, size, "FAIL id");
+            return false;
+        }
+
+        norflash_sector_erase(UI_TEST_FLASH_SECTOR);
+        for (i = 0U; i < UI_TEST_BUFFER_SIZE; i++) {
+            test_tx[i] = (uint8_t)i;
+        }
+        norflash_write(UI_TEST_FLASH_SECTOR, test_tx, UI_TEST_BUFFER_SIZE);
+        norflash_read(UI_TEST_FLASH_SECTOR, test_rx, UI_TEST_BUFFER_SIZE);
+        bus_lock_release();
+
+        for (i = 0U; i < UI_TEST_BUFFER_SIZE; i++) {
+            if (test_rx[i] != test_tx[i]) {
+                snprintf(result, size, "FAIL 0x%04X", i);
+                return false;
+            }
+        }
+
+        snprintf(result, size, "OK %08lX", (unsigned long)id);
+        return true;
+    }
+
+    case UI_TEST_ADC:
+        vr_init();
+        snprintf(result, size, "VR1 %u/%u\nVR2 %u/%u",
+                 (unsigned)vr_raw_get(VR1), (unsigned)vr_millivolt_get(VR1),
+                 (unsigned)vr_raw_get(VR2), (unsigned)vr_millivolt_get(VR2));
+        return true;
+
+    default:
+        snprintf(result, size, "unknown test");
+        return false;
+    }
+}
+
+static void test_worker_task(void *pvParameters)
+{
+    (void)pvParameters;
+
+    for (;;) {
+        ui_test_id_t test;
+
+        if (xQueueReceive(test_request_queue, &test, portMAX_DELAY) != pdTRUE) {
+            continue;
+        }
+
+        {
+            ui_test_result_t result;
+
+            result.test = test;
+            result.pass = test_execute(test, result.text, sizeof(result.text));
+
+            /* drop the oldest result when the ui has not collected it yet */
+            if (xQueueSend(test_result_queue, &result, 0) != pdTRUE) {
+                ui_test_result_t discarded;
+
+                (void)xQueueReceive(test_result_queue, &discarded, 0);
+                (void)xQueueSend(test_result_queue, &result, 0);
+            }
+        }
+    }
+}
+
 void ui_platform_init(void)
 {
     key_pin_init(UI_KEY_FOCUS_NEXT_PORT, UI_KEY_FOCUS_NEXT_PIN, UI_KEY_FOCUS_NEXT_CLK);
@@ -106,6 +239,12 @@ void ui_platform_init(void)
 
         rtc_ready = true;
         rtc_ready = ui_platform_time_get(&current_time);
+    }
+
+    test_request_queue = xQueueCreate(UI_TEST_QUEUE_DEPTH, sizeof(ui_test_id_t));
+    test_result_queue = xQueueCreate(UI_TEST_QUEUE_DEPTH, sizeof(ui_test_result_t));
+    if ((test_request_queue != NULL) && (test_result_queue != NULL)) {
+        xTaskCreate(test_worker_task, "ui_test", UI_TEST_TASK_STACK, NULL, 1, NULL);
     }
 }
 
@@ -149,5 +288,52 @@ bool ui_platform_key_pressed(ui_key_id_t key)
         return gpio_input_bit_get(UI_KEY_BACK_PORT, UI_KEY_BACK_PIN) == RESET;
     default:
         return false;
+    }
+}
+
+bool ui_platform_test_start(ui_test_id_t test)
+{
+    if ((test >= UI_TEST_COUNT) || (test_request_queue == NULL)) {
+        return false;
+    }
+
+    return xQueueSend(test_request_queue, &test, 0) == pdTRUE;
+}
+
+bool ui_platform_test_result_get(ui_test_result_t *result)
+{
+    if ((result == NULL) || (test_result_queue == NULL)) {
+        return false;
+    }
+
+    return xQueueReceive(test_result_queue, result, 0) == pdTRUE;
+}
+
+bool ui_platform_adc_sample(uint16_t *vr1_raw, uint32_t *vr1_millivolt,
+                             uint16_t *vr2_raw, uint32_t *vr2_millivolt)
+{
+    if (!adc_ready) {
+        vr_init();
+        adc_ready = true;
+    }
+
+    *vr1_raw = vr_raw_get(VR1);
+    *vr1_millivolt = vr_millivolt_get(VR1);
+    *vr2_raw = vr_raw_get(VR2);
+    *vr2_millivolt = vr_millivolt_get(VR2);
+    return true;
+}
+
+void ui_platform_led_set(bool on)
+{
+    if (!board_led1_ready) {
+        led_init(LED1);
+        board_led1_ready = true;
+    }
+
+    if (on) {
+        led_on(LED1);
+    } else {
+        led_off(LED1);
     }
 }

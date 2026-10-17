@@ -34,6 +34,9 @@ OF SUCH DAMAGE.
 
 #include "main.h"
 #include "ui_init.h"
+#include "drivers/print.h"
+#include "driver_test.h"
+#include "bus_lock.h"
 
 /*!
     \brief      main function
@@ -58,6 +61,14 @@ static void vApplicationTask(void *pvParameters)
     }
 }
 
+static void driverTestTask(void *pvParameters)
+{
+    (void)pvParameters;
+
+    driver_test();
+    vTaskDelete(NULL);
+}
+
 int main(void)
 {
 #ifdef __FIRMWARE_VERSION_DEFINE
@@ -66,6 +77,9 @@ int main(void)
 
     lv_init();
     systick_config();
+    print_init();
+    /* the driver and ui self tests share i2c1 and sqpi */
+    bus_lock_init();
     lv_port_disp_init();
 
 #ifdef __FIRMWARE_VERSION_DEFINE
@@ -78,6 +92,8 @@ int main(void)
 
     if (xTaskCreate(vApplicationTask, "lvgl", 2048, NULL, 1, NULL) == pdPASS)
     {
+        /* self tests run in the background so boot and tests never stall the ui */
+        xTaskCreate(driverTestTask, "dtest", 1024, NULL, 1, NULL);
         vTaskStartScheduler();
     }
     else
@@ -87,5 +103,6 @@ int main(void)
 
     while (1)
     {
+        __NOP();
     }
 }

@@ -73,6 +73,7 @@ add_compile_definitions(
 
 # ---- [mcudeva:user] BEGIN definitions — 用户自定义区，重新生成时保留，可自由修改 ----
 # 可在此追加宏定义，例如 add_compile_definitions(MY_FLAG=1)
+# __FIRMWARE_VERSION_DEFINE 已在 system_gd32w51x_f5hc.h 中定义,勿重复添加
 # ---- [mcudeva:user] END definitions ----
 
 # ==== [mcudeva:auto] BEGIN includes (hash:a071b82a) ====
